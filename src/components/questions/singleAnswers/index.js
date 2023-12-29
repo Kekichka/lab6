@@ -1,9 +1,13 @@
-import { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import './style.css';
 import * as uuid from 'uuid';
 
 const SingleAnswerComponent = (props) => {
+  const showCorrectAnswerButton = useRef();
+  const correctAnswerRevealed = useRef(false);
+  let incorrectAttempts = useRef(0);
   let selectedAnswerIndex = null;
+
   const radioClick = (index) => {
     selectedAnswerIndex = index;
     wrongRef.current.classList.remove('selected');
@@ -12,8 +16,6 @@ const SingleAnswerComponent = (props) => {
 
   const correctRef = useRef();
   const wrongRef = useRef();
-  const [incorrectAttempts, setIncorrectAttempts] = useState(0);
-  const [showCorrect, setShowCorrect] = useState(false);
 
   const checkOnClick = () => {
     if (selectedAnswerIndex === props.correctAnswer) {
@@ -22,71 +24,71 @@ const SingleAnswerComponent = (props) => {
     } else {
       wrongRef.current.classList.add('selected');
       correctRef.current.classList.remove('selected');
-      
-      setIncorrectAttempts((prevAttempts) => prevAttempts + 1);
-    }
-  };
+      incorrectAttempts.current += 1;
 
-  const showCorrectAnswer = () => {
-    
-    correctRef.current.classList.add('selected');
-    wrongRef.current.classList.remove('selected');
-    setShowCorrect(true);
-  };
-
-  useEffect(() => {
-    
-    if (showCorrect) {
-      const correctAnswerIndex = props.correctAnswer;
-      const correctAnswerInput = document.getElementById(
-        `answer-${correctAnswerIndex}`
-      );
-      if (correctAnswerInput) {
-        correctAnswerInput.checked = true;
+      if (incorrectAttempts.current >= 3) {
+        showCorrectAnswerButton.current.style.display = 'block';
       }
     }
-  }, [showCorrect, props.correctAnswer]);
+  };
 
   const qId = uuid.v1();
 
+  const showCorrectAnswerOnClick = () => {
+    correctRef.current.classList.add('selected', 'correct');
+    wrongRef.current.classList.remove('selected');
+    correctAnswerRevealed.current = true;
+
+   
+    const firstAnswerInput = document.querySelector(`input[name=group-${qId}]:first-of-type`);
+    if (firstAnswerInput) {
+      firstAnswerInput.checked = true;
+      firstAnswerInput.classList.add('selected'); 
+    }
+  };
+
   return (
+    
     <div className='question single-answer'>
       <div>
         <h3>{props.question}</h3>
       </div>
+
       <div className='answers'>
         {props.answers.map((answer, i) => {
           const id = uuid.v1();
           return (
             <div key={id}>
               <input
-                id={`answer-${i}`}
+                id={id}
                 type='radio'
                 name={`group-${qId}`}
                 onClick={() => radioClick(i)}
-                disabled={showCorrect} 
+                disabled={correctAnswerRevealed.current && i === 0}
               />
-              <label htmlFor={`answer-${i}`}>{answer}</label>
+              <label htmlFor={id}>{answer}</label>
             </div>
           );
         })}
       </div>
       <div className='check'>
         <div className='button' onClick={checkOnClick}>
-          Check My Answer
+          check my answer
           <div ref={correctRef} className='correct'>
-            Correct
+            correct
           </div>
           <div ref={wrongRef} className='wrong'>
-            Wrong
+            wrong
           </div>
         </div>
-        
-        {incorrectAttempts >= 3 && (
-          <button onClick={showCorrectAnswer} className='show-correct-answer'>
-            Show Me Correct Answer
-          </button>
-        )}
+
+        <button ref={showCorrectAnswerButton}
+          className='button'
+          onClick={showCorrectAnswerOnClick}
+          style={{ display: 'none' }}>
+          Show me correct answer
+        </button>
+
       </div>
     </div>
   );
