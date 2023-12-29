@@ -1,5 +1,5 @@
 import MultiAnswerComponent from './multiAnswers';
-import SingleAnswerComponent from './singleAnswer';
+import SingleAnswerComponent from './singleAnswers';
 import './style.css';
 
 const questions = [
